@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\FeedbackMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class FeedbackController extends Controller
@@ -58,6 +60,20 @@ class FeedbackController extends Controller
 
         if ($response)
         {
+            $members = Http::get('http://localhost:8080/api/members')->object();
+
+            foreach($members as $member)
+            {
+                $details = [
+                    'title' => 'Nouveau commentaire en attente de validation',
+                    'nameMember' => 'Salut '.$member->name.' '.$member->firstname,
+                    'body' => 'Nouveau commentaire de '.$request->name.' '.$request->firstname.' en attente de validation connectez-vous de le valider'
+                ];
+
+                Mail::to($member->email)->send(new FeedbackMail($details));
+
+            }
+
             return redirect()->route('home')->with('message', 'good');
         }
         else
